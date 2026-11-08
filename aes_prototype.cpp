@@ -1,5 +1,5 @@
 // ============================================================================
-// 
+// ERASE WHEN DONE
 // THE BIG PICTURE
 // AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
 // arranged in a 4x4 grid, filled column by column:
@@ -46,34 +46,52 @@ const uint8_t SBOX[256] = {
 uint8_t INV_SBOX[256];   // filled in by main()
 
 // ============================================================================
-// PART 1 - Encryption steps
+// PART 1 (JACK) - Encryption steps
 // ============================================================================
 
 // xtime: multiply a byte by 2 in AES math (AN953 p.6).
 // Shift left by 1. If the top bit (0x80) was set BEFORE shifting, XOR with 0x1b.
 // mixColumns and invMixColumns are both built from this.
 uint8_t xtime(uint8_t a) {
-    // TODO
+    
+    if (a <= 0x80) {
+        a <<=1;
+
+    } else {
+        (a = a<<=1)^0x1b;
+    }
+
     return a;
 }
 
 // addRoundKey: XOR each of the 16 state bytes with the matching key byte.
 // It undoes itself, so decryption uses the exact same function.
 void addRoundKey(Block& state, const Block& roundKey) {
-    // TODO
+
+    //XORing each byte of the state with the corresponding byte of the roundKey
+
+    for (int i = 0; i < 16; ++i) {
+        state[i] ^= roundKey[i];     
+    }
+
 }
 
 // subBytes: replace every byte with its S-box entry: state[i] = SBOX[state[i]]
 // This is the only non-linear step and the main source of AES's strength.
 void subBytes(Block& state) {
-    // TODO
+    
+
+
+
+
 }
 
 // shiftRows: rotate row r of the grid LEFT by r places (row 0 stays put).
 // Copy the state first and read from the copy, or you'll overwrite bytes you
 // still need. AN953 Example 3 (p.6) shows the before and after.
 void shiftRows(Block& state) {
-    // TODO
+    
+
 }
 
 // mixColumns: scramble each column (4 bytes a0..a3) into b0..b3.
@@ -84,7 +102,8 @@ void shiftRows(Block& state) {
 //   b3 = 3*a0 +   a1 +   a2 + 2*a3
 // Column c is state[4*c] .. state[4*c + 3].
 void mixColumns(Block& state) {
-    // TODO
+    
+
 }
 
 
@@ -148,7 +167,7 @@ void invMixColumns(Block& state) {
 
 
 // ============================================================================
-// PART 3 - Key expansion: turn 1 key into 11 round keys (AN953 p.6)
+// PART 3 (JACK) - Key expansion: turn 1 key into 11 round keys (AN953 p.6)
 // ============================================================================
 // roundKeys[0] is the original key. Build each roundKeys[i] from roundKeys[i-1].
 // Think of the key as 4 columns: col0 = bytes 0-3, col1 = 4-7, col2 = 8-11,
@@ -222,7 +241,7 @@ Block decrypt(Block state, const Block& key) {
 
 
 // ============================================================================
-// Testing and demo (already done)
+// Testing and demo
 // ============================================================================
 Block fromHex(const char* hex) {
     Block b{};
