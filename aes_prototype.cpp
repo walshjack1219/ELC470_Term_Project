@@ -1,8 +1,5 @@
 // ============================================================================
-// ELC 470 - AES-128 Prototype (skeleton)
-// Build: g++ -std=c++17 aes_prototype.cpp -o aes
-// Run:   ./aes
-//
+// 
 // THE BIG PICTURE
 // AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
 // arranged in a 4x4 grid, filled column by column:
@@ -17,9 +14,8 @@
 // undone in reverse order. Each TODO below is one of those steps.
 //
 // SPLITTING THE WORK (suggestion)
-//   Partner A: Part 1 (encrypt side)   xtime, subBytes, shiftRows, mixColumns
-//   Partner B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns
-//   Together:  Part 3 (keyExpansion) and Part 4 (encrypt / decrypt loops)
+//   Jack: Part 1 (encrypt side)   xtime, subBytes, shiftRows, mixColumns, Part 3 (keyExpansion)
+//   Padmaja B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns Part 4 (encrypt / decrypt loops)
 // main() checks each function on its own, so you can test your half
 // without waiting on your partner.
 // ============================================================================
@@ -91,6 +87,21 @@ void mixColumns(Block& state) {
     // TODO
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // PART 2 - Decryption steps (each one undoes a Part 1 step)
 // ============================================================================
@@ -121,6 +132,21 @@ void invMixColumns(Block& state) {
     // TODO
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // PART 3 - Key expansion: turn 1 key into 11 round keys (AN953 p.6)
 // ============================================================================
@@ -141,6 +167,22 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
     roundKeys[0] = key;
     // TODO
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 // PART 4 - Putting it together
@@ -167,6 +209,17 @@ Block decrypt(Block state, const Block& key) {
     // TODO
     return state;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 // Testing and demo (already done)
