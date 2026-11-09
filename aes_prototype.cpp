@@ -42,7 +42,9 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
-
+#include <iostream>
+#include <string>
+#include <cctype>
 //allows us to refer to a 16-byte block as "Block" instead of "std::array<uint8_t, 16>" which saves a ton of time
 using Block = std::array<uint8_t, 16>;
 
@@ -322,7 +324,7 @@ Block encrypt(Block state, const Block& key) {
 Block decrypt(Block state, const Block& key) {
     Block roundKeys[11];
     keyExpansion(key, roundKeys);
-    // TODO
+    
     return state;
 }
 
@@ -361,18 +363,75 @@ void check(const char* name, const Block& got, const char* expectedHex) {
     std::printf("  %-5s %s\n", ok ? "PASS" : "FAIL", name);
 }
 
-int main() {
-
-
-    //testing loop
-
-    for (int i = 0; i < 256; ++i) INV_SBOX[SBOX[i]] = i;
-
-    
-    // Individual checks. Inputs and outputs come from FIPS-197 Appendix B, round 1.
-    std::printf("Function checks:\n");
-    Block s;
-    s = fromHex("3243f6a8885a308d313198a2e0370734");
+// ============================================================================
+// Testing and demo
+// Replace everything from "Block fromHex" to the end of aes_prototype.cpp
+// with this section. Also add these three lines next to the other #includes
+// at the top of the file:
+//     #include <iostream>
+//     #include <string>
+//     #include <cctype>
+// ============================================================================
+ 
+// Convert 32 hex characters into a Block (portable on every compiler).
+Block fromHex(const char* hex) {
+    Block b{};
+    for (int i = 0; i < 16; ++i) {
+        unsigned int v;
+        std::sscanf(hex + 2 * i, "%2x", &v);
+        b[i] = static_cast<uint8_t>(v);
+    }
+    return b;
+}
+ 
+void print(const char* label, const Block& b) {
+    std::printf("%-17s", label);
+    for (uint8_t x : b) std::printf("%02x", x);
+    std::printf("\n");
+}
+ 
+// Also show a block as text, if every byte is a printable character or zero padding.
+void printText(const char* label, const Block& b) {
+    for (uint8_t x : b)
+        if (x != 0 && (x < 0x20 || x > 0x7e)) return;   // not text, skip
+    std::printf("%-17s\"", label);
+    for (uint8_t x : b) if (x) std::printf("%c", x);
+    std::printf("\"\n");
+}
+ 
+void check(const char* name, const Block& got, const char* expectedHex) {
+    bool ok = (got == fromHex(expectedHex));
+    std::printf("  %-5s %s\n", ok ? "PASS" : "FAIL", name);
+}
+ 
+// Ask the user for a 128-bit value. Accepts either:
+//   - exactly 32 hex characters        e.g. 000102030405060708090a0b0c0d0e0f
+//   - up to 16 characters of text      e.g. Charles Dickens.   (padded with zeros)
+//     (only when allowText is true; ciphertext must always be hex)
+Block askBlock(const char* prompt, bool allowText) {
+    while (true) {
+        std::printf("%s", prompt);
+        std::string in;
+        std::getline(std::cin, in);
+ 
+        bool allHex = in.size() == 32;
+        for (char c : in) if (!std::isxdigit(static_cast<unsigned char>(c))) allHex = false;
+        if (allHex) return fromHex(in.c_str());
+ 
+        if (allowText && !in.empty() && in.size() <= 16) {
+            Block b{};                                   // zero padded
+            for (size_t i = 0; i < in.size(); ++i) b[i] = static_cast<uint8_t>(in[i]);
+            return b;
+        }
+        std::printf("  Please enter 32 hex characters%s.\n",
+                    allowText ? " or up to 16 characters of text" : "");
+    }
+}
+ 
+// The original FIPS-197 checks, now in their own function.
+void runSelfTests() {
+    std::printf("\nFunction checks (FIPS-197 Appendix B, round 1):\n");
+    Block s = fromHex("3243f6a8885a308d313198a2e0370734");
     addRoundKey(s, fromHex("2b7e151628aed2a6abf7158809cf4f3c"));
     check("addRoundKey", s, "193de3bea0f4e22b9ac68d2ae9f84808");
     subBytes(s);      check("subBytes",      s, "d42711aee0bf98f1b8b45de51e415230");
@@ -384,18 +443,55 @@ int main() {
     Block rk[11];
     keyExpansion(fromHex("2b7e151628aed2a6abf7158809cf4f3c"), rk);
     check("keyExpansion",  rk[10], "d014f9a8c9ee2589e13f0cc8b6630ca6");
-
-    // Full demo, FIPS-197 Appendix C.1
-    std::printf("\nDemo (FIPS-197 Appendix C.1):\n");
+ 
+    std::printf("\nFull cipher (FIPS-197 Appendix C.1):\n");
     Block key = fromHex("000102030405060708090a0b0c0d0e0f");
     Block pt  = fromHex("00112233445566778899aabbccddeeff");
     Block ct  = encrypt(pt, key);
-    Block back = decrypt(ct, key);
-    print("  key", key);
-    print("  plaintext", pt);
-    print("  ciphertext", ct);
-    print("  decrypted", back);
-    check("encrypt", ct,   "69c4e0d86a7b0430d8cdb78070b4c55a");
-    check("decrypt", back, "00112233445566778899aabbccddeeff");
+    check("encrypt", ct,               "69c4e0d86a7b0430d8cdb78070b4c55a");
+    check("decrypt", decrypt(ct, key), "00112233445566778899aabbccddeeff");
+}
+ 
+int main() {
+    for (int i = 0; i < 256; ++i) INV_SBOX[SBOX[i]] = i;
+ 
+    std::printf("ELC 470 - AES-128 prototype\n");
+    while (true) {
+        std::printf("\nMODE:  00 = encode   01 = decode   1X = encode and decode\n"
+                    "       T  = run FIPS-197 self-tests   Q = quit\n> ");
+        std::string mode;
+        std::getline(std::cin, mode);
+        if (!std::cin || mode == "q" || mode == "Q") break;
+ 
+        if (mode == "t" || mode == "T") { runSelfTests(); continue; }
+ 
+        bool encode = (mode == "00" || mode == "10" || mode == "11");
+        bool decode = (mode == "01" || mode == "10" || mode == "11");
+        if (!encode && !decode) { std::printf("  Unknown mode.\n"); continue; }
+ 
+        Block key = askBlock("KEY        (hex or text): ", true);
+        Block pt{}, ct{};
+        if (encode) pt = askBlock("PLAINTEXT  (hex or text): ", true);
+        if (decode) ct = askBlock("CYPHERTEXT (hex):         ", false);
+ 
+        std::printf("\n");
+        print("  KEY", key);
+        if (encode) {
+            Block out = encrypt(pt, key);
+            print("  PLAINTEXT in", pt);
+            print("  CYPHERTEXT", out);
+            // Round trip: decrypting our own output should give back the input.
+            std::printf("  round trip     %s\n",
+                        decrypt(out, key) == pt ? "OK (decrypts back to the plaintext)"
+                                                : "MISMATCH");
+        }
+        if (decode) {
+            Block out = decrypt(ct, key);
+            print("  CYPHERTEXT in", ct);
+            print("  PLAINTEXT", out);
+            printText("  as text", out);
+        }
+    }
     return 0;
 }
+ 
