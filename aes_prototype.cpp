@@ -2,7 +2,7 @@
 // ERASE WHEN DONE
 //
 //
-// Run with g++ -std=c++17 -Wall aes_prototype.cpp -o aes.exe; if ($?) { .\aes.exe }
+
 //
 // THE BIG PICTURE
 // AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
@@ -31,7 +31,8 @@
 
 
 
-
+// Run on windows with g++ -std=c++17 -Wall aes_prototype.cpp -o aes.exe; if ($?) { .\aes.exe }
+// NOTE FOR US: delete the .exe file before committing changes to github
 
 
 
@@ -65,13 +66,7 @@ const uint8_t SBOX[256] = {
 uint8_t INV_SBOX[256];   // filled in by main()
 
 
-
-
-
-
-
-
-
+//DONE
 
 // ============================================================================
 // PART 1 (JACK) - Encryption steps
@@ -178,7 +173,7 @@ void mixColumns(Block& state) {
 
 
 // ============================================================================
-// PART 2 - Decryption steps (each one undoes a Part 1 step)
+// PART 2 (Padmaja) - Decryption steps (each one undoes a Part 1 step)
 // ============================================================================
 
 // invSubBytes: same as subBytes but use INV_SBOX.
@@ -190,6 +185,8 @@ void invSubBytes(Block& state) {
 void invShiftRows(Block& state) {
     // TODO
 }
+
+
 
 // invMixColumns: same shape as mixColumns with bigger numbers:
 //   b0 = 14*a0 + 11*a1 + 13*a2 +  9*a3
@@ -240,7 +237,39 @@ void invMixColumns(Block& state) {
 // Check: round key 1 for key 2b7e1516... should be a0fafe17 88542cb1 23a33939 2a6c7605
 void keyExpansion(const Block& key, Block roundKeys[11]) {
     roundKeys[0] = key;
-    // TODO
+    
+    for (int i = 1; i <= 10; ++i) {
+        Block& prev = roundKeys[i - 1];
+        Block& curr = roundKeys[i];
+
+        // Rotate and substitute
+        uint8_t t[4] = { SBOX[prev[13]], SBOX[prev[14]], SBOX[prev[15]], SBOX[prev[12]] };
+
+        // XOR with rcon
+        uint8_t rcon = (i == 1) ? 0x01 
+        : xtime((i == 2) ? 0x01 
+        : xtime((i == 3) ? 0x02 
+        : xtime((i == 4) ? 0x04 
+        : xtime((i == 5) ? 0x08 
+        : xtime((i == 6) ? 0x10 
+        : xtime((i == 7) ? 0x20 
+        : xtime((i == 8) ? 0x40 
+        : xtime((i == 9) ? 0x80 
+        : xtime(0x1b)))))))));
+        
+        t[0] ^= rcon;
+
+        // Generate new round key
+        for (int j = 0; j < 4; ++j) {
+            curr[j] = prev[j] ^ t[j];
+            t[j] = curr[j]; // Update t for the next column
+        }
+        for (int j = 4; j < 16; ++j) {
+            curr[j] = prev[j] ^ curr[j - 4];
+        }
+    }
+    
+
 }
 
 
@@ -260,7 +289,7 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
 
 
 // ============================================================================
-// PART 4 - Putting it together
+// PART 4 (Padmaja)- Putting it together
 // ============================================================================
 
 // encrypt:
@@ -297,7 +326,7 @@ Block decrypt(Block state, const Block& key) {
 
 
 // ============================================================================
-// Testing and demo
+// Testing and demo (AI GENERATED FOR TESTING PURPOSES)
 // ============================================================================
 Block fromHex(const char* hex) {
     Block b{};
