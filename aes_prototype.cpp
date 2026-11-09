@@ -184,6 +184,7 @@ void mixColumns(Block& state) {
 void invSubBytes(Block& state) {
   for(int i = 0; i<16; i++){
     state[i] = INV_SBOX[state[i]];
+  }
 }
 
 // invShiftRows: rotate row r RIGHT by r places.
@@ -206,9 +207,18 @@ void invShiftRows(Block& state) {
 //   b3 = 11*a0 + 13*a1 +  9*a2 + 14*a3
 // Hint: write a helper mul(a, n) that builds n*a from doublings.
 //   e.g. 9*a = 8*a + a = xtime(xtime(xtime(a))) ^ a
-uint8_t mul(uint8_t a, uint8_t n) {
-    // TODO (optional helper, but it makes invMixColumns much shorter)
-    return a;
+uint8_t multiply(uint8_t a, uint8_t n) {
+    uint8_t result = 0; // Fix 1: Declare and initialize result
+    
+    while (n > 0) {
+        if (n & 1) {
+            result ^= a;
+        }
+        
+        a = (a << 1) ^ ((a & 0x80) ? 0x1B : 0);
+        n >>= 1;
+    }
+    return result; // Fix 2: Return result instead of a
 }
 
 void invMixColumns(Block& state) {
@@ -354,7 +364,20 @@ Block encrypt(Block state, const Block& key) {
 Block decrypt(Block state, const Block& key) {
     Block roundKeys[11];
     keyExpansion(key, roundKeys);
-    // TODO
+    for (int round = 10; round >= 0; --round) {         // 1. count DOWN, one loop
+        if (round == 10) {
+            addRoundKey(state, roundKeys[10]);           // 2. start with the LAST key
+        } else if (round >= 1) {                         // 3. "else if", not a second for
+            invShiftRows(state);
+            invSubBytes(state);
+            addRoundKey(state, roundKeys[round]);        // 4. addRoundKey BEFORE invMixColumns
+            invMixColumns(state);
+        } else {
+            invShiftRows(state);                         // 5. capital S
+            invSubBytes(state);
+            addRoundKey(state, roundKeys[0]);
+        }
+    }
     return state;
 }
 
@@ -369,29 +392,6 @@ Block decrypt(Block state, const Block& key) {
 
 
 
-// ============================================================================
-// Testing and demo (AI GENERATED FOR TESTING PURPOSES)
-// ============================================================================
-Block fromHex(const char* hex) {
-    Block b{};
-    for (int i = 0; i < 16; ++i) {
-        unsigned int v;
-        std::sscanf(hex + 2 * i, "%2x", &v);
-        b[i] = static_cast<uint8_t>(v);
-    }
-    return b;
-}
-
-void print(const char* label, const Block& b) {
-    std::printf("%-14s", label);
-    for (uint8_t x : b) std::printf("%02x", x);
-    std::printf("\n");
-}
-
-void check(const char* name, const Block& got, const char* expectedHex) {
-    bool ok = (got == fromHex(expectedHex));
-    std::printf("  %-5s %s\n", ok ? "PASS" : "FAIL", name);
-}
 
 // ============================================================================
 // Testing and demo
