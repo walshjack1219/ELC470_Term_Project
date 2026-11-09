@@ -1,5 +1,7 @@
 // ============================================================================
 // ERASE WHEN DONE
+//
+//
 // THE BIG PICTURE
 // AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
 // arranged in a 4x4 grid, filled column by column:
@@ -13,19 +15,34 @@
 // Encryption = 10 "rounds" of four simple steps. Decryption = the same steps
 // undone in reverse order. Each TODO below is one of those steps.
 //
-// SPLITTING THE WORK (suggestion)
+// SPLITTING THE WORK
 //   Jack: Part 1 (encrypt side)   xtime, subBytes, shiftRows, mixColumns, Part 3 (keyExpansion)
 //   Padmaja B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns Part 4 (encrypt / decrypt loops)
+// 
 // main() checks each function on its own, so you can test your half
-// without waiting on your partner.
+// without waiting.
 // ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+// libraries needed for the projects
 #include <array>
 #include <cstdint>
 #include <cstdio>
 
+//allows us to refer to a 16-byte block as "Block" instead of "std::array<uint8_t, 16>" which saves a ton of time
 using Block = std::array<uint8_t, 16>;
 
 // S-box from AN953 Table 3 (the inverse table is built from it in main).
+// AI generated 
 const uint8_t SBOX[256] = {
   0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
   0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
@@ -45,13 +62,25 @@ const uint8_t SBOX[256] = {
   0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16 };
 uint8_t INV_SBOX[256];   // filled in by main()
 
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // PART 1 (JACK) - Encryption steps
 // ============================================================================
 
+
+// Alot of these functions are based on the AES pdf file provided on canvas. 
+
+
 // xtime: multiply a byte by 2 in AES math (AN953 p.6).
 // Shift left by 1. If the top bit (0x80) was set BEFORE shifting, XOR with 0x1b.
-// mixColumns and invMixColumns are both built from this.
 uint8_t xtime(uint8_t a) {
     
     if (a <= 0x80) {
@@ -65,7 +94,6 @@ uint8_t xtime(uint8_t a) {
 }
 
 // addRoundKey: XOR each of the 16 state bytes with the matching key byte.
-// It undoes itself, so decryption uses the exact same function.
 void addRoundKey(Block& state, const Block& roundKey) {
 
     //XORing each byte of the state with the corresponding byte of the roundKey
@@ -77,20 +105,26 @@ void addRoundKey(Block& state, const Block& roundKey) {
 }
 
 // subBytes: replace every byte with its S-box entry: state[i] = SBOX[state[i]]
-// This is the only non-linear step and the main source of AES's strength.
 void subBytes(Block& state) {
     
-
-
-
-
+    for (int i = 0 ; i < 16; i++){
+        state[i] = SBOX[state[i]];
+    }
+    
 }
 
 // shiftRows: rotate row r of the grid LEFT by r places (row 0 stays put).
-// Copy the state first and read from the copy, or you'll overwrite bytes you
-// still need. AN953 Example 3 (p.6) shows the before and after.
 void shiftRows(Block& state) {
     
+    for (int r = 1; r < 4 ; r++){
+        uint8_t temp[4];
+        for (int c = 0; c < 4; c++){
+            temp[c] = state[r + 4*c];
+        }
+        for (int c = 0; c < 4; c++){
+            state[r + 4*c] = temp[(c + r) % 4];
+        }
+    }
 
 }
 
@@ -103,7 +137,27 @@ void shiftRows(Block& state) {
 // Column c is state[4*c] .. state[4*c + 3].
 void mixColumns(Block& state) {
     
+    //loops through each column
+    for(int c = 0; c < 4; c++){
+        //sets the temp vars to the values in the block
+        uint8_t a0 = state[4*c];
+        uint8_t a1 = state[4*c + 1];
+        uint8_t a2 = state[4*c + 2];
+        uint8_t a3 = state[4*c + 3];    
 
+        //performs the mix columns op from the AES pdf
+        uint8_t b0 = xtime(a0) ^ (xtime(a1) ^ a1) ^ a2 ^ a3;
+        uint8_t b1 = a0 ^ xtime(a1) ^ (xtime(a2) ^ a2) ^ a3;
+        uint8_t b2 = a0 ^ a1 ^ xtime(a2) ^ (xtime(a3) ^ a3);
+        uint8_t b3 = (xtime(a0) ^ a0) ^ a1 ^ a2 ^ xtime(a3);
+
+        //sets the new values 
+        state[4*c] = b0;
+        state[4*c+1] = b1;
+        state[4*c+2] = b2;
+        state[4*c+3] = b3;
+    }
+    
 }
 
 
