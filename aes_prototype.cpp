@@ -342,7 +342,11 @@ Block decrypt(Block state, const Block& key) {
 // ============================================================================
 Block fromHex(const char* hex) {
     Block b{};
-    for (int i = 0; i < 16; ++i) std::sscanf(hex + 2 * i, "%2hhx", &b[i]);
+    for (int i = 0; i < 16; ++i) {
+        unsigned int v;
+        std::sscanf(hex + 2 * i, "%2x", &v);
+        b[i] = static_cast<uint8_t>(v);
+    }
     return b;
 }
 
