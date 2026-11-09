@@ -1,38 +1,4 @@
-// ============================================================================
-// ERASE WHEN DONE
-//
-//
-
-//
-// THE BIG PICTURE
-// AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
-// arranged in a 4x4 grid, filled column by column:
-//
-//        col0 col1 col2 col3
-//   row0 [ 0    4    8   12 ]
-//   row1 [ 1    5    9   13 ]      byte at (row r, col c) = state[r + 4*c]
-//   row2 [ 2    6   10   14 ]
-//   row3 [ 3    7   11   15 ]
-//
-// Encryption = 10 "rounds" of four simple steps. Decryption = the same steps
-// undone in reverse order. Each TODO below is one of those steps.
-//
-// SPLITTING THE WORK
-//   Jack: Part 1 (encrypt side)   xtime, subBytes, shiftRows, mixColumns, Part 3 (keyExpansion)
-//   Padmaja B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns 
-// 
-//   Part 4 (encrypt(jack) / decrypt(Padmaja) loops)
-// 
-// main() checks each function on its own, so you can test your half
-// without waiting.
-// ============================================================================
-
-
-
-
-
-
-
+//Jack and Padmaja
 // Run on windows with g++ -std=c++17 -Wall aes_prototype.cpp -o aes.exe; if ($?) { .\aes.exe }
 // NOTE FOR US: delete the .exe file before committing changes to github
 
@@ -307,19 +273,6 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
     
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
