@@ -130,18 +130,6 @@ void mixColumns(Block& state) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 // PART 2 (Padmaja) - Decryption steps (each one undoes a Part 1 step)
 // ============================================================================
@@ -216,19 +204,6 @@ void invMixColumns(Block& state) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ============================================================================
 // PART 3 (JACK) - Key expansion: turn 1 key into 11 round keys (AN953 p.6)
 // ============================================================================
@@ -280,8 +255,6 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
 // ============================================================================
 // PART 4 (Jack & Padmaja)- Putting it together
 // ============================================================================
-
-
 
 
 
@@ -338,22 +311,9 @@ Block decrypt(Block state, const Block& key) {
 
 
 
-
-
-
-
-
-
-
-
 // ============================================================================
 // Testing and demo
-// Replace everything from "Block fromHex" to the end of aes_prototype.cpp
-// with this section. Also add these three lines next to the other #includes
-// at the top of the file:
-//     #include <iostream>
-//     #include <string>
-//     #include <cctype>
+//
 // ============================================================================
  
 // Convert 32 hex characters into a Block (portable on every compiler).
