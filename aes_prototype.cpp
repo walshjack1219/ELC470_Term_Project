@@ -2,6 +2,8 @@
 // ERASE WHEN DONE
 //
 //
+// Run with g++ -std=c++17 -Wall aes_prototype.cpp -o aes.exe; if ($?) { .\aes.exe }
+//
 // THE BIG PICTURE
 // AES scrambles a 16-byte block using a 16-byte key. The 16 bytes are
 // arranged in a 4x4 grid, filled column by column:
@@ -87,7 +89,7 @@ uint8_t xtime(uint8_t a) {
         a <<=1;
 
     } else {
-        (a = a<<=1)^0x1b;
+        a = (a<<=1)^0x1b;
     }
 
     return a;
