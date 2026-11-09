@@ -181,7 +181,7 @@ void mixColumns(Block& state) {
 // invSubBytes: same as subBytes but use INV_SBOX.
 void invSubBytes(Block& state) {
   for(int i = 0; i<16; i++){
-    state[i] = INV_SBOX[state[i]]
+    state[i] = INV_SBOX[state[i]];
 }
 
 // invShiftRows: rotate row r RIGHT by r places.
@@ -345,14 +345,26 @@ Block encrypt(Block state, const Block& key) {
 }
 
 
-// decrypt: the encrypt steps backwards, round keys used from 10 down to 0:
+// decrypt(PADMAJA): the encrypt steps backwards, round keys used from 10 down to 0:
 //   addRoundKey with roundKeys[10]
 //   rounds 9 down to 1: invShiftRows, invSubBytes, addRoundKey(roundKeys[round]), invMixColumns
 //   last:               invShiftRows, invSubBytes, addRoundKey(roundKeys[0])
 Block decrypt(Block state, const Block& key) {
     Block roundKeys[11];
     keyExpansion(key, roundKeys);
-    // TODO
+       if (round == 0) {
+            addRoundKey(state, roundKeys[0]);
+        } if (int round = 9; round >= 1; round--) {
+            invsubBytes(state);
+            invshiftRows(state);
+            invmixColumns(state);
+            addRoundKey(state, roundKeys[round]);
+        } else {
+            invsubBytes(state);
+            invshiftRows(state);
+            addRoundKey(state, roundKeys[10]);
+        }
+    }
     return state;
 }
 
