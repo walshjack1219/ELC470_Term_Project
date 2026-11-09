@@ -182,15 +182,22 @@ void mixColumns(Block& state) {
 
 // invSubBytes: same as subBytes but use INV_SBOX.
 void invSubBytes(Block& state) {
-    // TODO
+  for(int i = 0; i<16; i++){
+    state[i] = INV_SBOX[state[i]];
 }
 
 // invShiftRows: rotate row r RIGHT by r places.
 void invShiftRows(Block& state) {
-    // TODO
+  for (int r = 1; r < 4 ; r++){
+    uint8_t temp[4];
+    for (int c = 0; c < 4; c++){
+      temp[c] = state[r + 4*c];
+    }
+    for (int c = 0; c < 4; c++){
+      state[r + 4*c] = temp[(c - r + 4) % 4];
+    }
+  }
 }
-
-
 
 // invMixColumns: same shape as mixColumns with bigger numbers:
 //   b0 = 14*a0 + 11*a1 + 13*a2 +  9*a3
@@ -205,7 +212,30 @@ uint8_t mul(uint8_t a, uint8_t n) {
 }
 
 void invMixColumns(Block& state) {
-    // TODO
+   for(int c = 0; c < 4; c++){
+        //sets the temp vars to the values in the block
+        uint8_t a0 = state[4*c];
+        uint8_t a1 = state[4*c + 1];
+        uint8_t a2 = state[4*c + 2];
+        uint8_t a3 = state[4*c + 3];    
+
+        //performs the mix columns op from the AES pdf
+        uint8_t b0 = multiply(a0, 0x0E) ^ multiply(a1, 0x0B)
+                   ^ multiply(a2, 0x0D) ^ multiply(a3, 0x09);
+        uint8_t b1 = multiply(a0, 0x09) ^ multiply(a1, 0x0E)
+                   ^ multiply(a2, 0x0B) ^ multiply(a3, 0x0D);
+        uint8_t b2 = multiply(a0, 0x0D) ^ multiply(a1, 0x09)
+                   ^ multiply(a2, 0x0E) ^ multiply(a3, 0x0B);
+        uint8_t b3 = multiply(a0, 0x0B) ^ multiply(a1, 0x0D)
+                   ^ multiply(a2, 0x09) ^ multiply(a3, 0x0E);
+
+        //sets the new values 
+        state[4*c] = b0;
+        state[4*c+1] = b1;
+        state[4*c+2] = b2;
+        state[4*c+3] = b3;
+    }
+    
 }
 
 
@@ -317,14 +347,14 @@ Block encrypt(Block state, const Block& key) {
 }
 
 
-// decrypt: the encrypt steps backwards, round keys used from 10 down to 0:
+// decrypt(PADMAJA): the encrypt steps backwards, round keys used from 10 down to 0:
 //   addRoundKey with roundKeys[10]
 //   rounds 9 down to 1: invShiftRows, invSubBytes, addRoundKey(roundKeys[round]), invMixColumns
 //   last:               invShiftRows, invSubBytes, addRoundKey(roundKeys[0])
 Block decrypt(Block state, const Block& key) {
     Block roundKeys[11];
     keyExpansion(key, roundKeys);
-    
+    // TODO
     return state;
 }
 
