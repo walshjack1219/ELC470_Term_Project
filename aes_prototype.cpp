@@ -80,11 +80,11 @@ uint8_t INV_SBOX[256];   // filled in by main()
 // Shift left by 1. If the top bit (0x80) was set BEFORE shifting, XOR with 0x1b.
 uint8_t xtime(uint8_t a) {
     
-    if (a <= 0x80) {
+    if (a < 0x80) {
         a <<=1;
 
     } else {
-        a = (a<<=1)^0x1b;
+        a = (a << 1) ^ 0x1b;
     }
 
     return a;
@@ -238,6 +238,8 @@ void invMixColumns(Block& state) {
 void keyExpansion(const Block& key, Block roundKeys[11]) {
     roundKeys[0] = key;
     
+    uint8_t rcon = 0x01;//put here before the loop since it was multiplying by 2 each round
+
     for (int i = 1; i <= 10; ++i) {
         Block& prev = roundKeys[i - 1];
         Block& curr = roundKeys[i];
@@ -245,19 +247,9 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
         // Rotate and substitute
         uint8_t t[4] = { SBOX[prev[13]], SBOX[prev[14]], SBOX[prev[15]], SBOX[prev[12]] };
 
-        // XOR with rcon
-        uint8_t rcon = (i == 1) ? 0x01 
-        : xtime((i == 2) ? 0x01 
-        : xtime((i == 3) ? 0x02 
-        : xtime((i == 4) ? 0x04 
-        : xtime((i == 5) ? 0x08 
-        : xtime((i == 6) ? 0x10 
-        : xtime((i == 7) ? 0x20 
-        : xtime((i == 8) ? 0x40 
-        : xtime((i == 9) ? 0x80 
-        : xtime(0x1b)))))))));
         
         t[0] ^= rcon;
+        rcon = xtime(rcon);// once per round, right after using it
 
         // Generate new round key
         for (int j = 0; j < 4; ++j) {
@@ -346,7 +338,27 @@ void check(const char* name, const Block& got, const char* expectedHex) {
 }
 
 int main() {
+
+
+    std::printf("xtime(80) = %02x\n", xtime(0x80));
+
     for (int i = 0; i < 256; ++i) INV_SBOX[SBOX[i]] = i;
+
+    //temp check for part 3 
+
+    Block test[11];
+    keyExpansion(fromHex("2b7e151628aed2a6abf7158809cf4f3c"), test);
+    for (int i = 0; i < 11; ++i) {
+        std::printf("%2d  ", i);
+        for (int b = 0; b < 16; ++b) {
+            std::printf("%02x", test[i][b]);
+            if (b % 4 == 3) std::printf(" ");
+        }
+        std::printf("\n");
+    }
+
+
+
 
     // Individual checks. Inputs and outputs come from FIPS-197 Appendix B, round 1.
     std::printf("Function checks:\n");
