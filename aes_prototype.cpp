@@ -19,7 +19,9 @@
 //
 // SPLITTING THE WORK
 //   Jack: Part 1 (encrypt side)   xtime, subBytes, shiftRows, mixColumns, Part 3 (keyExpansion)
-//   Padmaja B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns Part 4 (encrypt / decrypt loops)
+//   Padmaja B: Part 2 (decrypt side)   invSubBytes, invShiftRows, invMixColumns 
+// 
+//   Part 4 (encrypt(jack) / decrypt(Padmaja) loops)
 // 
 // main() checks each function on its own, so you can test your half
 // without waiting.
@@ -281,19 +283,37 @@ void keyExpansion(const Block& key, Block roundKeys[11]) {
 
 
 // ============================================================================
-// PART 4 (Padmaja)- Putting it together
+// PART 4 (Jack & Padmaja)- Putting it together
 // ============================================================================
 
-// encrypt:
+
+
+
+
+// encrypt (JACK):
 //   addRoundKey with roundKeys[0]
 //   rounds 1 to 9:  subBytes, shiftRows, mixColumns, addRoundKey(roundKeys[round])
 //   round 10:       subBytes, shiftRows, addRoundKey(roundKeys[10])   (no mixColumns)
 Block encrypt(Block state, const Block& key) {
     Block roundKeys[11];
     keyExpansion(key, roundKeys);
-    // TODO
+    for(int round = 0; round <= 10; ++round) {
+        if (round == 0) {
+            addRoundKey(state, roundKeys[0]);
+        } else if (round < 10) {
+            subBytes(state);
+            shiftRows(state);
+            mixColumns(state);
+            addRoundKey(state, roundKeys[round]);
+        } else {
+            subBytes(state);
+            shiftRows(state);
+            addRoundKey(state, roundKeys[10]);
+        }
+    }
     return state;
 }
+
 
 // decrypt: the encrypt steps backwards, round keys used from 10 down to 0:
 //   addRoundKey with roundKeys[10]
@@ -340,26 +360,11 @@ void check(const char* name, const Block& got, const char* expectedHex) {
 int main() {
 
 
-    std::printf("xtime(80) = %02x\n", xtime(0x80));
+    //testing loop
 
     for (int i = 0; i < 256; ++i) INV_SBOX[SBOX[i]] = i;
 
-    //temp check for part 3 
-
-    Block test[11];
-    keyExpansion(fromHex("2b7e151628aed2a6abf7158809cf4f3c"), test);
-    for (int i = 0; i < 11; ++i) {
-        std::printf("%2d  ", i);
-        for (int b = 0; b < 16; ++b) {
-            std::printf("%02x", test[i][b]);
-            if (b % 4 == 3) std::printf(" ");
-        }
-        std::printf("\n");
-    }
-
-
-
-
+    
     // Individual checks. Inputs and outputs come from FIPS-197 Appendix B, round 1.
     std::printf("Function checks:\n");
     Block s;
